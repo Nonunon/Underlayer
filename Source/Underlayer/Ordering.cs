@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Brutal.ImGuiApi;
 using Brutal.ImGuiApi.Internal;
+using Brutal.Numerics;
 using Verse;
 
 namespace Underlayer
@@ -9,6 +10,10 @@ namespace Underlayer
     internal static class Ordering
     {
         const ImGuiWindowFlags AlwaysOnTop = ImGuiWindowFlags.Popup | ImGuiWindowFlags.Tooltip | ImGuiWindowFlags.ChildMenu | ImGuiWindowFlags.Modal;
+        const ImGuiWindowFlags BlockerFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove
+            | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus
+            | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoNav;
+        const string BlockerName = "##Underlayer.Blocker";
 
         static readonly List<ImGuiWindowPtr> stacked = new List<ImGuiWindowPtr>();
         static readonly List<ImGuiWindowPtr> loose = new List<ImGuiWindowPtr>();
@@ -47,9 +52,15 @@ namespace Underlayer
             WindowStack stack = Find.WindowStack;
             if (stack != null)
             {
+                int modal = -1;
+                for (int i = 0; i < stack.Count; i++)
+                    if (stack[i].absorbInputAroundWindow && Proxies.Drawn.ContainsKey(stack[i]))
+                        modal = i;
                 for (int i = 0; i < stack.Count; i++)
                 {
                     Window window = stack[i];
+                    if (i == modal)
+                        stacked.Add(Blocker());
                     if (Proxies.Drawn.TryGetValue(window, out ImGuiWindowPtr proxy))
                         stacked.Add(proxy);
                     foreach (var claim in Layers.Claims)
@@ -76,6 +87,16 @@ namespace Underlayer
                 ImGui.Internal.BringWindowToDisplayFront(window);
             foreach (ImGuiWindowPtr window in onTop)
                 ImGui.Internal.BringWindowToDisplayFront(window);
+        }
+
+        static ImGuiWindowPtr Blocker()
+        {
+            ImGui.SetNextWindowPos(new float2(0f, 0f), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(ImGui.GetIO().DisplaySize, ImGuiCond.Always);
+            ImGui.Begin(BlockerName, BlockerFlags);
+            ImGuiWindowPtr window = ImGui.Internal.GetCurrentWindow();
+            ImGui.End();
+            return window;
         }
 
         static bool Contains(List<ImGuiWindowPtr> list, ImGuiWindowPtr window)
