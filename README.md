@@ -1,36 +1,35 @@
 # Underlayer
 
-A RimWorld 1.7 framework that stacks Dear ImGui windows together with vanilla windows.
+A RimWorld 1.7 framework that stacks Dear ImGui windows with vanilla windows.
 
-On 1.7 every ImGui window draws on top of every vanilla window, so a mod's ImGui window can cover a dialog that opened after it. With Underlayer, each vanilla window is drawn into its own invisible ImGui window, and once per frame the ImGui windows are put in the same order as `Find.WindowStack`. ImGui windows that no mod claims (the game's own tools, mods that don't use Underlayer) stay on top like before, and ImGui popups and tooltips stay above everything.
+On 1.7 every ImGui window draws over every vanilla window, so a mod's ImGui window can hide a dialog opened after it. Underlayer draws each vanilla window into an invisible ImGui window and sorts them every frame to match `Find.WindowStack`. Unclaimed ImGui windows (the game's own, mods without Underlayer) stay on top as before, and ImGui popups and tooltips stay above everything.
 
-When no mod claims a window, Underlayer does nothing.
+If no mod claims a window, Underlayer does nothing.
 
 ## Using it
 
 1. Reference `Underlayer.dll` (`1.7/Assemblies`, `Private="false"`) and add `Unon.Underlayer` to your About.xml `modDependencies` and `loadAfter`.
-2. Give each ImGui window a `Verse.Window` in the window stack whose `windowRect` matches it (in UI units), the same way you would block clicks to the map.
-3. Call `Layers.Claim(hostWindow)` between your `ImGui.Begin` and `ImGui.End`, every frame:
+2. Host each ImGui window in a `Verse.Window` whose `windowRect` matches it (in UI units).
+3. Call `Layers.Claim(host)` right after `ImGui.Begin`, every frame:
 
 ```csharp
 public override void ExtraOnGUI()
 {
     if (Event.current.type != EventType.Repaint)
         return;
-    if (ImGui.Begin("My window"))
-    {
-        Layers.Claim(this);
+    bool visible = ImGui.Begin("My window");
+    Layers.Claim(this);
+    if (visible)
         ImGui.Text("Hello");
-    }
     ImGui.End();
 }
 ```
 
-Your ImGui window now draws at the host window's place in the stack. Click the host to bring it to the front, open a dialog and it covers your window.
+Your ImGui window now sits at the host's place in the stack: click it to bring it forward, and dialogs opened later cover it.
 
-Letters and confirmation boxes sit on RimWorld's Dialog layer and are modal, so a window in a lower layer never comes in front of them, and Underlayer blocks ImGui input under them the same way. If your window should be able to come forward anyway, claim it with `Layers.Claim(this, riseAboveDialogs: true)`. Clicking a visible part of it then lifts it above the dialogs and focuses it. It drops back to its own layer, right under the other window, as soon as you click another window or a new one opens (a new letter, a game tab). `Layers.IsRaised(host)` tells you whether it is lifted right now.
+Letters and confirmation boxes are modal and on the Dialog layer, so lower windows never come in front of them, and Underlayer blocks ImGui input under them too. To let your window come forward anyway, use `Layers.Claim(this, riseAboveDialogs: true)`. Clicking it then lifts it above the dialogs until another window is clicked or opened. `Layers.IsRaised(host)` says whether it is lifted.
 
-`Layers.Available` is false if a game update changed the GUI backend parts Underlayer needs. It then switches itself off and logs a warning.
+`Layers.Available` is false if a game update broke the GUI backend parts Underlayer needs. It then switches off and logs a warning.
 
 ## Requirements
 
@@ -39,7 +38,7 @@ Letters and confirmation boxes sit on RimWorld's Dialog layer and are modal, so 
 
 ## Building
 
-`dotnet build -c Release` in `Source/Underlayer`. The project looks for RimWorld and Harmony in the default Steam folders. If yours are elsewhere, create `Local.props` next to this README:
+`dotnet build -c Release` in `Source/Underlayer`. RimWorld and Harmony are expected in the default Steam folders. If yours are elsewhere, add a `Local.props` next to this README:
 
 ```xml
 <Project>
