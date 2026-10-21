@@ -22,7 +22,15 @@ namespace Underlayer
 
         static bool Wants(Window host) => wanted.TryGetValue(host, out int frame) && Time.frameCount - frame <= 2;
 
-        public static void MouseDown()
+        public static void Prefix()
+        {
+            if (Event.current == null || Event.current.rawType != EventType.MouseDown)
+                return;
+            try { MouseDown(); }
+            catch (System.Exception e) { Log.ErrorOnce("[Underlayer] " + e, 0x5A1D03); }
+        }
+
+        static void MouseDown()
         {
             WindowStack stack = Find.WindowStack;
             if (stack == null || wanted.Count == 0)

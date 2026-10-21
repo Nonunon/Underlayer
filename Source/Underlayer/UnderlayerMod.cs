@@ -14,6 +14,8 @@ namespace Underlayer
                 finalizer: new HarmonyMethod(typeof(Proxies), nameof(Proxies.Finalizer)));
             harmony.Patch(AccessTools.Method(typeof(GUI), nameof(GUI.ProcessPendingWindows)),
                 postfix: new HarmonyMethod(typeof(Ordering), nameof(Ordering.Postfix)));
+            harmony.Patch(AccessTools.Method(typeof(GUI), nameof(GUI.DispatchInputToWindows)),
+                prefix: new HarmonyMethod(typeof(Rising), nameof(Rising.Prefix)));
             Log.Message($"[Underlayer] {typeof(UnderlayerMod).Assembly.GetName().Version.ToString(3)} loaded");
         }
     }

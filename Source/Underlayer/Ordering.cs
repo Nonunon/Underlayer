@@ -23,11 +23,6 @@ namespace Underlayer
 
         public static void Postfix()
         {
-            if (Event.current != null && Event.current.rawType == EventType.MouseDown)
-            {
-                try { Rising.MouseDown(); }
-                catch (Exception e) { Log.ErrorOnce("[Underlayer] " + e, 0x5A1D03); }
-            }
             if (!Layers.InFrame())
                 return;
             int frame = ImGui.GetFrameCount();
