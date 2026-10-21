@@ -4,11 +4,11 @@
     <author>Unon</author>
     <packageId>Unon.Underlayer</packageId>
     <url>https://github.com/Nonunon/Underlayer</url>
-    <description>A framework for mods that draw Dear ImGui windows on RimWorld 1.7.
+    <description>A little framework for mods that draw Dear ImGui windows on RimWorld 1.7.
 
-Normally every ImGui window sits on top of every vanilla window, so a mod's ImGui window can hide a dialog that opened after it. Underlayer fixes that: ImGui windows from mods that use it are stacked together with vanilla windows, in the same order as the game's own window stack.
+Normally an ImGui window sits on top of everything, so it can hide a letter or a "Really quit?" box that pops up after it. Underlayer fixes that: ImGui windows from mods that use it stack with the game's own windows, in the same order the game uses.
 
-Does nothing on its own. Mods that use it will list it as a dependency. RimWorld 1.7 only.</description>
+It doesn't do anything by itself, you only need it when a mod asks for it. RimWorld 1.7 only.</description>
     <supportedVersions>
         <li>1.7</li>
     </supportedVersions>
