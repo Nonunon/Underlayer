@@ -1,0 +1,89 @@
+using System;
+using System.Collections.Generic;
+using Brutal.ImGuiApi;
+using Brutal.ImGuiApi.Internal;
+using Verse;
+
+namespace Underlayer
+{
+    internal static class Ordering
+    {
+        const ImGuiWindowFlags AlwaysOnTop = ImGuiWindowFlags.Popup | ImGuiWindowFlags.Tooltip | ImGuiWindowFlags.ChildMenu | ImGuiWindowFlags.Modal;
+
+        static readonly List<ImGuiWindowPtr> stacked = new List<ImGuiWindowPtr>();
+        static readonly List<ImGuiWindowPtr> loose = new List<ImGuiWindowPtr>();
+        static readonly List<ImGuiWindowPtr> onTop = new List<ImGuiWindowPtr>();
+        static int sortedFrame = -1;
+
+        public static void Postfix()
+        {
+            if (!Layers.InFrame())
+                return;
+            int frame = ImGui.GetFrameCount();
+            if (frame == sortedFrame)
+                return;
+            sortedFrame = frame;
+            try
+            {
+                if (Layers.Claims.Count > 0 || Proxies.Drawn.Count > 0)
+                    Sort();
+            }
+            catch (Exception e)
+            {
+                Log.ErrorOnce("[Underlayer] " + e, 0x5A1D02);
+            }
+            finally
+            {
+                Layers.Claims.Clear();
+                Proxies.EndFrame(frame);
+            }
+        }
+
+        static void Sort()
+        {
+            stacked.Clear();
+            loose.Clear();
+            onTop.Clear();
+            WindowStack stack = Find.WindowStack;
+            if (stack != null)
+            {
+                for (int i = 0; i < stack.Count; i++)
+                {
+                    Window window = stack[i];
+                    if (Proxies.Drawn.TryGetValue(window, out ImGuiWindowPtr proxy))
+                        stacked.Add(proxy);
+                    foreach (var claim in Layers.Claims)
+                        if (claim.Host == window)
+                            stacked.Add(claim.Window);
+                }
+            }
+
+            ImVector<ImGuiWindowPtr> all = ImGui.GetCurrentContext().Windows;
+            for (int i = 0; i < all.Count; i++)
+            {
+                ImGuiWindowPtr window = all[i];
+                if ((window.Flags & ImGuiWindowFlags.ChildWindow) != 0)
+                    continue;
+                if ((window.Flags & AlwaysOnTop) != 0)
+                    onTop.Add(window);
+                else if (!Contains(stacked, window))
+                    loose.Add(window);
+            }
+
+            foreach (ImGuiWindowPtr window in stacked)
+                ImGui.Internal.BringWindowToDisplayFront(window);
+            foreach (ImGuiWindowPtr window in loose)
+                ImGui.Internal.BringWindowToDisplayFront(window);
+            foreach (ImGuiWindowPtr window in onTop)
+                ImGui.Internal.BringWindowToDisplayFront(window);
+        }
+
+        static bool Contains(List<ImGuiWindowPtr> list, ImGuiWindowPtr window)
+        {
+            foreach (ImGuiWindowPtr item in list)
+                if (Layers.Same(item, window))
+                    return true;
+            return false;
+        }
+    }
+}
