@@ -23,6 +23,7 @@ namespace Underlayer
             ImGuiWindowPtr root = window.RootWindow;
             if (root.IsNull())
                 root = window;
+            root.Flags |= ImGuiWindowFlags.NoBringToFrontOnFocus;
             foreach (var claim in Claims)
                 if (Same(claim.Window, root))
                     return;
