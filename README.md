@@ -28,6 +28,8 @@ public override void ExtraOnGUI()
 
 Your ImGui window now draws at the host window's place in the stack. Click the host to bring it to the front, open a dialog and it covers your window.
 
+Letters and confirmation boxes sit on RimWorld's Dialog layer and are modal, so a window in a lower layer never comes in front of them, and Underlayer blocks ImGui input under them the same way. If your window should be able to come forward anyway, claim it with `Layers.Claim(this, riseAboveDialogs: true)`. Clicking a visible part of it then lifts it above the dialogs and focuses it. It drops back to its own layer, right under the other window, as soon as you click another window or a new one opens (a new letter, a game tab). `Layers.IsRaised(host)` tells you whether it is lifted right now.
+
 `Layers.Available` is false if a game update changed the GUI backend parts Underlayer needs. It then switches itself off and logs a warning.
 
 ## Requirements
