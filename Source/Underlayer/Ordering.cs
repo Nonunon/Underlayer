@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Brutal.ImGuiApi;
 using Brutal.ImGuiApi.Internal;
 using Brutal.Numerics;
+using UnityEngine;
 using Verse;
 
 namespace Underlayer
@@ -22,6 +23,11 @@ namespace Underlayer
 
         public static void Postfix()
         {
+            if (Event.current != null && Event.current.rawType == EventType.MouseDown)
+            {
+                try { Rising.MouseDown(); }
+                catch (Exception e) { Log.ErrorOnce("[Underlayer] " + e, 0x5A1D03); }
+            }
             if (!Layers.InFrame())
                 return;
             int frame = ImGui.GetFrameCount();
@@ -30,6 +36,7 @@ namespace Underlayer
             sortedFrame = frame;
             try
             {
+                Rising.Update();
                 if (Layers.Claims.Count > 0 || Proxies.Drawn.Count > 0)
                     Sort();
             }

@@ -13,10 +13,14 @@ namespace Underlayer
 
         public static bool Available => !Backend.Broken;
 
-        public static void Claim(Window host)
+        public static void Claim(Window host) => Claim(host, false);
+
+        public static void Claim(Window host, bool riseAboveDialogs)
         {
             if (host == null || Backend.Broken || !InFrame())
                 return;
+            if (riseAboveDialogs)
+                Rising.Want(host);
             ImGuiWindowPtr window = ImGui.Internal.GetCurrentWindow();
             if (window.IsNull())
                 return;
@@ -32,6 +36,8 @@ namespace Underlayer
         }
 
         public static string ProxyName(Window window) => Proxies.NameOf(window);
+
+        public static bool IsRaised(Window host) => Rising.IsRaised(host);
 
         internal static bool Engaged => ImGui.GetFrameCount() - lastClaimFrame <= 1;
 
